@@ -42,7 +42,7 @@ Widget connectbutton() {
     padding: const EdgeInsets.only(top:80.0),
     child: RaisedButton(elevation: 10.0,
     onPressed: (){
-      tcpsock.tcpSend('192.168.1.43', 9999,'requesting data');
+      // tcpsock.tcpSend('192.168.1.43', 9999,'requesting data');
     },
     child: Text('Connect'),),
   );
