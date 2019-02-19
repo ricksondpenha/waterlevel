@@ -10,27 +10,15 @@ class TCPBloc implements BlocBase {
     int slevel; //level 1 to 4 of sump level
     int pumpstate;  // 0 or 1
 
-  StreamController<int> _tcpController = StreamController<int>();
-  StreamSink<int> get tcpReceive => _tcpController.sink;
-  Stream<int> get tcpSend => _tcpController.stream;
+  StreamController<String> _tcpController = StreamController<String>();
+  StreamSink<String> get tcpSend => _tcpController.sink;
+  Stream<String> get tcpReceive => _tcpController.stream;
 
-  //
-  // Stream to handle the action on the counter
-  //
-  StreamController _actionController = StreamController();
-  StreamSink get incrementCounter => _actionController.sink;
-
-  //
-  // Constructor
-  //
   TcpBloc(){
-    // _counter = 0;
-    // _actionController.stream
-    //                  .listen(_handleLogic);
+    _tcpController.stream.listen(db.connect());
   }
 
   void dispose(){
-    _actionController.close();
     _tcpController.close();
   }
 

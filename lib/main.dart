@@ -1,6 +1,12 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:waterlevel/bloc/bloc_provider.dart';
+import 'package:waterlevel/bloc/tcp_bloc.dart';
 import 'package:waterlevel/services/tcpsocket.dart';
+import 'package:waterlevel/statemodel.dart';
 
 void main() => runApp(MyApp());
 
@@ -12,16 +18,36 @@ class MyApp extends StatefulWidget {
 }
 
 class MyAppState extends State<MyApp> {
-  TcpSocket tcp = new TcpSocket();
-
+  Socket socket;
   void initState() {
     super.initState();
-    tcp.connect('192.168.1.43', 9999);
+    tcpconnect('192.168.1.43', 9999);
     // tcp.sendmessage('{"request":"state"}');
+  }
+
+  tcpconnect(String iPaddress, int port) async {
+    Socket.connect(iPaddress, port).then((sock) {
+      socket = sock;
+      print('Connected to: '
+          '${socket.remoteAddress.address}:${socket.remotePort}');
+      socket.listen(
+        (data) {
+          setState(() {
+            handledata(data);
+            print(new String.fromCharCodes(data).trim());
+          });
+        },
+        onError: () {
+          print('error');
+        },
+      );
+      // socket.write('{"request":"state"}');
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    // final tcpbloc = BlocProvider.of<TCPBloc>(context);
     return MaterialApp(
       theme: ThemeData.dark(),
       home: Scaffold(
@@ -69,7 +95,8 @@ class MyAppState extends State<MyApp> {
               style: TextStyle(fontSize: 22.0, fontWeight: FontWeight.bold),
             ),
             onPressed: () {
-              tcp.sendmessage('{"request":"state"}');
+              socket.write('{"request":"state"}');
+              // tcpbloc.tcpSend.add('{"pump":1}');
               print('ON button pressed');
             },
           ),
@@ -94,7 +121,7 @@ class MyAppState extends State<MyApp> {
     return Positioned(
         top: 85,
         left: 180,
-        child: StreamBuilder<Object>(
+        child: StreamBuilder<String>(
             stream: null,
             builder: (context, snapshot) {
               if (snapshot.hasData)
@@ -160,6 +187,18 @@ class MyAppState extends State<MyApp> {
       color: Colors.white10,
     );
   }
+
+  void handledata(List<int> data) {
+    String jsonstring = String.fromCharCodes(data).trim();
+    final jsonData = json.decode(jsonstring);
+    if(jsonData['state'] != null) {
+      print('state recieved');
+      //Level.fromJson(jsonData); add this to sink
+    } else if(jsonData['level'] != null){
+      print('level recieved');
+      // PumpState.fromJson(jsonData); add this to sink
+    }
+  }
 }
 
 class DrawerData extends StatelessWidget {
@@ -212,7 +251,8 @@ class DrawerData extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ), onPressed: () {
+                  ),
+                  onPressed: () {
                     print('connect pressed');
                   },
                 )

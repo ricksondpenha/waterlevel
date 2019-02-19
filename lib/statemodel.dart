@@ -12,7 +12,7 @@ String waterlevelToJson(Waterlevel data) {
 
 class Waterlevel {
     Level level;
-    State state;
+    PumpState state;
 
     Waterlevel({
         this.level,
@@ -21,7 +21,7 @@ class Waterlevel {
 
     factory Waterlevel.fromJson(Map<String, dynamic> json) => new Waterlevel(
         level: Level.fromJson(json["level"]),
-        state: State.fromJson(json["state"]),
+        state: PumpState.fromJson(json["state"]),
     );
 
     Map<String, dynamic> toJson() => {
@@ -50,14 +50,14 @@ class Level {
     };
 }
 
-class State {
+class PumpState {
     int pump;
 
-    State({
+    PumpState({
         this.pump,
     });
 
-    factory State.fromJson(Map<String, dynamic> json) => new State(
+    factory PumpState.fromJson(Map<String, dynamic> json) => new PumpState(
         pump: json["pump"],
     );
 

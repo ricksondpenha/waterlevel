@@ -7,12 +7,12 @@ import 'package:waterlevel/services/tcpsocket.dart';
 class DB {
   final db = TcpSocket();
 
-  Stream<String> connect() {
-    return db.connect('192.168.1.43', 9999);
+  connect() {
+    db.connect('192.168.1.43', 9999);
   }
 
-  Future<String> createData(String question, List<String> answers) async {
-
+  Future<String> receive() async {
+    return TcpSocket().receive();
   }
 
   void sendMessage(String message) async {
