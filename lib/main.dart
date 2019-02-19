@@ -7,8 +7,9 @@ import 'package:waterlevel/bloc/bloc_provider.dart';
 import 'package:waterlevel/bloc/tcp_bloc.dart';
 import 'package:waterlevel/services/tcpsocket.dart';
 import 'package:waterlevel/statemodel.dart';
+import 'package:waterlevel/tcpapp.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(MyApp()); //MyApp()); //TcpApp());
 
 class MyApp extends StatefulWidget {
   @override
@@ -18,54 +19,26 @@ class MyApp extends StatefulWidget {
 }
 
 class MyAppState extends State<MyApp> {
+  String message;
   Socket socket;
+
   void initState() {
     super.initState();
-    tcpconnect('192.168.1.43', 9999);
-    // tcp.sendmessage('{"request":"state"}');
-  }
-
-  tcpconnect(String iPaddress, int port) async {
-    Socket.connect(iPaddress, port).then((sock) {
-      socket = sock;
-      print('Connected to: '
-          '${socket.remoteAddress.address}:${socket.remotePort}');
-      socket.listen(
-        (data) {
-          setState(() {
-            handledata(data);
-            print(new String.fromCharCodes(data).trim());
-          });
-        },
-        onError: () {
-          print('error');
-        },
-      );
-      // socket.write('{"request":"state"}');
+    ServerSocket.bind(InternetAddress.anyIPv4, 9999).then((server) {
+      server.listen(handleClient);
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // final tcpbloc = BlocProvider.of<TCPBloc>(context);
-    return MaterialApp(
-      theme: ThemeData.dark(),
-      home: Scaffold(
-        drawer: new DrawerData(),
-        appBar: AppBar(
-          centerTitle: true,
-          title: Text('Water Level Controller'),
-        ),
-        body: Stack(
-          children: <Widget>[
-            overHeadTank(),
-            tanklevel(),
-            pumpControl(),
-            undergroundSump(),
-            sumplevel(),
-          ],
-        ),
-      ),
+  void handleClient(Socket client) {
+    print('Connection from '
+        '${client.remoteAddress.address}:${client.remotePort}');
+    client.listen(
+      (data) {
+        setState(() {
+          print(new String.fromCharCodes(data).trim());
+          message = String.fromCharCodes(data).trim();
+        });
+      },
     );
   }
 
@@ -95,7 +68,7 @@ class MyAppState extends State<MyApp> {
               style: TextStyle(fontSize: 22.0, fontWeight: FontWeight.bold),
             ),
             onPressed: () {
-              socket.write('{"request":"state"}');
+              // socket.write('{"request":"state"}');
               // tcpbloc.tcpSend.add('{"pump":1}');
               print('ON button pressed');
             },
@@ -134,7 +107,7 @@ class MyAppState extends State<MyApp> {
                 return Container(
                   height: 98,
                   width: 127,
-                  color: Colors.grey,
+                  color: Colors.blue,
                 );
             }));
   }
@@ -165,7 +138,7 @@ class MyAppState extends State<MyApp> {
               else
                 return Container(
                   decoration: BoxDecoration(
-                      color: Colors.grey,
+                      color: Colors.blue,
                       borderRadius: BorderRadius.circular(10.0)),
                   height: 82,
                   width: 120,
@@ -188,16 +161,58 @@ class MyAppState extends State<MyApp> {
     );
   }
 
-  void handledata(List<int> data) {
-    String jsonstring = String.fromCharCodes(data).trim();
-    final jsonData = json.decode(jsonstring);
-    if(jsonData['state'] != null) {
-      print('state recieved');
-      //Level.fromJson(jsonData); add this to sink
-    } else if(jsonData['level'] != null){
-      print('level recieved');
-      // PumpState.fromJson(jsonData); add this to sink
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    return MaterialApp(
+      theme: ThemeData.dark(),
+      home: Scaffold(
+        drawer: new DrawerData(),
+        appBar: AppBar(
+          centerTitle: true,
+          title: Text('Water Level Controller'),
+        ),
+        body: Stack(
+          children: <Widget>[
+            pipeline(),
+            overHeadTank(),
+            tanklevel(),
+            pumpControl(),
+            undergroundSump(),
+            sumplevel(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget pipeline() {
+    Color color;
+    if(true){
+      color = Colors.blue;
+    } else{
+      color = Colors.grey;
     }
+    return Positioned(
+      top: 90,
+      left: 45,
+      child: Stack(
+        children: <Widget>[
+          Positioned(
+            child: Container(
+              color: color,
+              width: 8.0,
+              height: 370.0,
+            ),
+          ),
+          Container(
+            width: 135.0,
+            height: 8.0,
+            color: color,
+          )
+        ],
+      ),
+    );
   }
 }
 
