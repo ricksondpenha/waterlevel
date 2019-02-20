@@ -6,24 +6,28 @@ import 'package:waterlevel/screens/drawerdata.dart';
 class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-  final bloc = BlocProvider.of<WaterLevelBloc>(context);
-  bloc.clientconnect('192.168.1.101', 9999);
-    String message;
+    final bloc = BlocProvider.of<WaterLevelBloc>(context);
+    bloc.connect();
     return Scaffold(
       drawer: new DrawerData(),
       appBar: AppBar(
         centerTitle: true,
         title: Text('Water Level Controller'),
       ),
-      body: Stack(
-        children: <Widget>[
-          _pipeline(),
-          _overHeadTank(),
-          _tanklevel(),
-          _pumpControl(bloc),
-          _undergroundSump(),
-          _sumplevel(),
-        ],
+      body: GestureDetector(
+        onTap: () {
+          bloc.send(bloc.ipaddress, bloc.port, '{"request":"level"}');
+        },
+        child: Stack(
+          children: <Widget>[
+            _pipeline(bloc),
+            _overHeadTank(),
+            _tanklevel(bloc),
+            _pumpControl(bloc),
+            _undergroundSump(),
+            _sumplevel(bloc),
+          ],
+        ),
       ),
     );
   }
@@ -45,28 +49,35 @@ class HomePage extends StatelessWidget {
         child: Container(
           height: 80,
           width: 80,
-          child: StreamBuilder<String>(
-            stream: bloc.tcprecieve,
-            builder: (context, snapshot) {
-
-              return FloatingActionButton(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                tooltip: 'Pump Control',
-                child: Text(
-                  'ON',
-                  style: TextStyle(fontSize: 22.0, fontWeight: FontWeight.bold),
-                ),
-                onPressed: () {
-                  // socket.write('{"request":"state"}');
-                  // tcpbloc.tcpSend.add('{"pump":1}');
-                  bloc.send('message');
-                  print('ON button pressed');
-                },
-              );
-            }
-          ),
+          child: StreamBuilder<int>(
+              stream: bloc.statestream,
+              builder: (context, snapshot) {
+                if (snapshot.data == 1) {
+                  return pumpbutton(bloc, 'ON', Colors.blue);
+                } else {
+                  return pumpbutton(bloc, 'OFF', Colors.grey);
+                }
+              }),
         ));
+  }
+
+  Widget pumpbutton(WaterLevelBloc bloc, String s, Color color) {
+    int toggle = 1;
+    if (s == 'ON') toggle = 0;
+    return FloatingActionButton(
+      backgroundColor: color,
+      foregroundColor: Colors.white,
+      tooltip: 'Pump Control',
+      child: Text(
+        s,
+        style: TextStyle(fontSize: 22.0, fontWeight: FontWeight.bold),
+      ),
+      onPressed: () {
+        bloc.send(bloc.ipaddress, bloc.port, '{"pump":$toggle}');
+        // bloc.statesink.add(toggle);
+        print('$s button pressed');
+      },
+    );
   }
 
   Widget _undergroundSump() {
@@ -82,15 +93,14 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _tanklevel() {
-    int level;
+  Widget _tanklevel(WaterLevelBloc bloc) {
     return Positioned(
         top: 85,
         left: 180,
-        child: StreamBuilder<String>(
-            stream: null,
+        child: StreamBuilder<int>(
+            stream: bloc.tlevelstream,
             builder: (context, snapshot) {
-              if (snapshot.hasData)
+              if (snapshot.hasData && snapshot.data > 1)
                 return Container(
                   height: 98,
                   width: 127,
@@ -100,19 +110,19 @@ class HomePage extends StatelessWidget {
                 return Container(
                   height: 98,
                   width: 127,
-                  color: Colors.blue,
+                  color: Colors.grey,
                 );
             }));
   }
 
-  Widget _sumplevel() {
+  Widget _sumplevel(WaterLevelBloc bloc) {
     return Positioned(
         top: 440,
         left: 36,
-        child: StreamBuilder<Object>(
-            stream: null,
+        child: StreamBuilder<int>(
+            stream: bloc.slevelstream,
             builder: (context, snapshot) {
-              if (snapshot.hasData)
+              if (snapshot.hasData && snapshot.data > 1)
                 return Container(
                   decoration: BoxDecoration(
                       color: Colors.blue,
@@ -131,18 +141,10 @@ class HomePage extends StatelessWidget {
               else
                 return Container(
                   decoration: BoxDecoration(
-                      color: Colors.blue,
+                      color: Colors.grey,
                       borderRadius: BorderRadius.circular(10.0)),
                   height: 82,
                   width: 120,
-                  child: Column(
-                    children: <Widget>[
-                      // colorlevel(),
-                      // colorlevel(),
-                      // colorlevel(),
-                      // colorlevel()
-                    ],
-                  ),
                 );
             }));
   }
@@ -154,7 +156,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _pipeline() {
+  Widget _pipeline(WaterLevelBloc bloc) {
     Color color;
     if (true) color = Colors.blue;
     color = Colors.grey;
@@ -180,25 +182,3 @@ class HomePage extends StatelessWidget {
     );
   }
 }
-
-// Socket socket;
-
-// void initState() {
-//   super.initState();
-// ServerSocket.bind(InternetAddress.anyIPv4, 9999).then((server) {
-//   server.listen(handleClient);
-// });
-// }
-
-// void handleClient(Socket client) {
-//   print('Connection from '
-//       '${client.remoteAddress.address}:${client.remotePort}');
-//   client.listen(
-//     (data) {
-//       setState(() {
-//         print(new String.fromCharCodes(data).trim());
-//         message = String.fromCharCodes(data).trim();
-//       });
-//     },
-//   );
-// }
