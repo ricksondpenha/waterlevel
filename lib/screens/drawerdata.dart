@@ -19,7 +19,7 @@ class DrawerData extends StatelessWidget {
           SystemChannels.textInput.invokeMethod('TextInput.hide');
         },
         child: Container(
-          color: Colors.blueGrey,
+          // color: Colors.blueGrey,
           child: Padding(
             padding: const EdgeInsets.only(top: 100.0, left: 30, right: 30),
             child: Column(
@@ -29,7 +29,7 @@ class DrawerData extends StatelessWidget {
                   child: TextField(
                     controller: _ipaddress,
                     keyboardType: TextInputType.numberWithOptions(),
-                    decoration: InputDecoration(labelText: 'IP Address'),
+                    decoration: InputDecoration(labelText: 'IP Address', hintText: '192.168.1.40'),
                   ),
                 ),
                 Padding(
@@ -37,32 +37,35 @@ class DrawerData extends StatelessWidget {
                   child: TextField(
                     controller: _port,
                     keyboardType: TextInputType.numberWithOptions(),
-                    decoration: InputDecoration(labelText: 'Port'),
+                    decoration: InputDecoration(labelText: 'Port', hintText: '9999'),
                   ),
                 ),
-                RaisedButton(
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30.0)),
-      elevation: 10.0,
-      color: Colors.white30,
-      child: Container(
-        height: 40.0,
-        width: 130.0,
-        child: Center(
-          child: Text(
-            'CONNECT',
-            style: TextStyle(
-              fontSize: 22.0,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ),
-      onPressed: () {
-        bloc.setIP(_ipaddress.text, int.parse(_port.text));
-      },
-    ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 10.0),
+                  child: RaisedButton(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30.0)),
+                    elevation: 10.0,
+                    color: Colors.grey,
+                    child: Container(
+                      height: 40.0,
+                      width: 130.0,
+                      child: Center(
+                        child: Text(
+                          'CONNECT',
+                          style: TextStyle(
+                            fontSize: 22.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    onPressed: () {
+                      bloc.setIP(_ipaddress.text, int.parse(_port.text));
+                    },
+                  ),
+                ),
               ],
             ),
           ),

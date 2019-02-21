@@ -6,7 +6,7 @@ import 'package:waterlevel/bloc/bloc_provider.dart';
 class WaterLevelBloc implements BlocBase {
   Socket client;
 
-  String ipaddress = '192.168.1.43';
+  String ipaddress = '192.168.1.40';
   int port = 9999;
 
   int tlevel; //level 1 to 4 of tank level
@@ -42,13 +42,13 @@ class WaterLevelBloc implements BlocBase {
     return 0;
   }
 
-  void setIP(String ip, int textport){
+  void setIP(String ip, int textport) {
     ipaddress = ip;
     port = textport;
   }
 
   void clientconnect(String ipAddress, int port) {
-    if(ipaddress == null) ipaddress =ipAddress;
+    if (ipaddress == null) ipaddress = ipAddress;
     Socket.connect(ipaddress, port).then((sock) {
       print('${sock.remoteAddress} , ${sock.remotePort}');
       client = sock;
@@ -64,11 +64,9 @@ class WaterLevelBloc implements BlocBase {
       sock.write(message);
       sock.listen((data) {
         _handledata(String.fromCharCodes(data).trim());
-      }
-          // , onDone: () {
-          //   sock.destroy();
-          // }
-          );
+      }, onDone: () {
+        sock.destroy();
+      });
     });
   }
 
