@@ -29,7 +29,7 @@ class DrawerData extends StatelessWidget {
                   child: TextField(
                     controller: _ipaddress,
                     keyboardType: TextInputType.numberWithOptions(),
-                    decoration: InputDecoration(labelText: 'IP Address', hintText: '192.168.1.40'),
+                    decoration: InputDecoration(labelText: 'IP Address', hintText: '${bloc.ipaddress}'),
                   ),
                 ),
                 Padding(
@@ -37,7 +37,7 @@ class DrawerData extends StatelessWidget {
                   child: TextField(
                     controller: _port,
                     keyboardType: TextInputType.numberWithOptions(),
-                    decoration: InputDecoration(labelText: 'Port', hintText: '9999'),
+                    decoration: InputDecoration(labelText: 'Port', hintText: '${bloc.port}'),
                   ),
                 ),
                 Padding(
@@ -63,6 +63,7 @@ class DrawerData extends StatelessWidget {
                     ),
                     onPressed: () {
                       bloc.setIP(_ipaddress.text, int.parse(_port.text));
+                      bloc.updateData(_ipaddress.text, int.parse(_port.text));
                     },
                   ),
                 ),

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:waterlevel/bloc/bloc_provider.dart';
 
 class WaterLevelBloc implements BlocBase {
@@ -28,11 +29,11 @@ class WaterLevelBloc implements BlocBase {
   int connect() {
     // if(iPaddress == null) iPaddress = '192.168.1.43';
     ServerSocket.bind(InternetAddress.anyIPv4, 9999).then((server) {
-      print('${server.address} , ${server.port}');
+      // print('${server.address} , ${server.port}');
       server.listen((clients) {
         client = clients;
         clients.listen((data) {
-          print(String.fromCharCodes(data).trim());
+          // print(String.fromCharCodes(data).trim());
           // tcpdata.add(String.fromCharCodes(data).trim());
           _handledata(String.fromCharCodes(data).trim());
         });
@@ -40,6 +41,13 @@ class WaterLevelBloc implements BlocBase {
     });
 
     return 0;
+  }
+
+  void updateData(String ipAddress, int port) async {
+    await Firestore.instance
+        .collection('waterlevel')
+        .document('activate')
+        .updateData({'ipaddress':ipAddress, 'port':port});
   }
 
   void setIP(String ip, int textport) {
@@ -50,17 +58,17 @@ class WaterLevelBloc implements BlocBase {
   void clientconnect(String ipAddress, int port) {
     if (ipaddress == null) ipaddress = ipAddress;
     Socket.connect(ipaddress, port).then((sock) {
-      print('${sock.remoteAddress} , ${sock.remotePort}');
+      // print('${sock.remoteAddress} , ${sock.remotePort}');
       client = sock;
       sock.listen((data) {
-        print(String.fromCharCodes(data).trim());
+        // print(String.fromCharCodes(data).trim());
       });
     });
   }
 
   void send(String iPaddress, int port, String message) {
     Socket.connect(iPaddress, port).then((sock) {
-      print('${sock.remoteAddress} , ${sock.remotePort}');
+      // print('${sock.remoteAddress} , ${sock.remotePort}');
       sock.write(message);
       sock.listen((data) {
         _handledata(String.fromCharCodes(data).trim());
@@ -84,13 +92,13 @@ class WaterLevelBloc implements BlocBase {
     final jsonData = json.decode(data);
     if (jsonData['pump'] != null) {
       pumpstate = jsonData['pump'];
-      print('Pump value: $pumpstate');
+      // print('Pump value: $pumpstate');
       statesink.add(pumpstate);
     } else if (jsonData['Slevel'] != null) {
       slevel = jsonData['Slevel'];
       tlevel = jsonData['Tlevel'];
-      print(
-          'Tank level: ${tlevel.toString()}, Sump level: ${slevel.toString()}');
+      // print(
+      //     'Tank level: ${tlevel.toString()}, Sump level: ${slevel.toString()}');
       slevelsink.add(slevel);
       tlevelsink.add(tlevel);
     }
