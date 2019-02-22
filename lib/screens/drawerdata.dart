@@ -19,58 +19,73 @@ class DrawerData extends StatelessWidget {
           SystemChannels.textInput.invokeMethod('TextInput.hide');
         },
         child: Container(
-          // color: Colors.blueGrey,
           child: Padding(
             padding: const EdgeInsets.only(top: 100.0, left: 30, right: 30),
             child: Column(
               children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
-                    controller: _ipaddress,
-                    keyboardType: TextInputType.numberWithOptions(),
-                    decoration: InputDecoration(labelText: 'IP Address', hintText: '${bloc.ipaddress}'),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
-                    controller: _port,
-                    keyboardType: TextInputType.numberWithOptions(),
-                    decoration: InputDecoration(labelText: 'Port', hintText: '${bloc.port}'),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 10.0),
-                  child: RaisedButton(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30.0)),
-                    elevation: 10.0,
-                    color: Colors.grey,
-                    child: Container(
-                      height: 40.0,
-                      width: 130.0,
-                      child: Center(
-                        child: Text(
-                          'CONNECT',
-                          style: TextStyle(
-                            fontSize: 22.0,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    onPressed: () {
-                      bloc.setIP(_ipaddress.text, int.parse(_port.text));
-                      bloc.updateData(_ipaddress.text, int.parse(_port.text));
-                    },
-                  ),
-                ),
+                buildIPaddress(_ipaddress, bloc),
+                buildPort(_port, bloc),
+                buildConnectbtn(bloc, _ipaddress, _port),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Padding buildConnectbtn(WaterLevelBloc bloc, TextEditingController _ipaddress,
+      TextEditingController _port) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10.0),
+      child: RaisedButton(
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
+        elevation: 10.0,
+        color: Colors.grey,
+        child: Container(
+          height: 40.0,
+          width: 130.0,
+          child: Center(
+            child: Text(
+              'CONNECT',
+              style: TextStyle(
+                fontSize: 22.0,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+        onPressed: () {
+          bloc.setIP(_ipaddress.text, int.parse(_port.text));
+          bloc.updateData(_ipaddress.text, int.parse(_port.text));
+        },
+      ),
+    );
+  }
+
+  Padding buildPort(TextEditingController _port, WaterLevelBloc bloc) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: TextField(
+        controller: _port,
+        keyboardType: TextInputType.numberWithOptions(),
+        decoration:
+            InputDecoration(labelText: 'Port', hintText: '${bloc.port}'),
+      ),
+    );
+  }
+
+  Padding buildIPaddress(
+      TextEditingController _ipaddress, WaterLevelBloc bloc) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: TextField(
+        controller: _ipaddress,
+        keyboardType: TextInputType.numberWithOptions(),
+        decoration: InputDecoration(
+            labelText: 'IP Address', hintText: '${bloc.ipaddress}'),
       ),
     );
   }
