@@ -127,7 +127,7 @@ class Dash extends StatelessWidget {
     return AppBar(
       automaticallyImplyLeading: false,
       centerTitle: true,
-      title: Text('Water Level Controller'),
+      title: Text('Air Quality Monitoring'),
     );
   }
 
