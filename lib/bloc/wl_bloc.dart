@@ -4,27 +4,42 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:waterlevel/bloc/bloc_provider.dart';
 
-class WaterLevelBloc implements BlocBase {
+class AirQualityBloc implements BlocBase {
   Socket client;
 
   String ipaddress = '192.168.1.40';
   int port = 9999;
 
-  int tlevel; //level 1 to 4 of tank level
-  int slevel; //level 1 to 4 of sump level
-  int pumpstate; // 0 or 1
+  String methaneLevel; //level of MQ136 sensor
+  String dustLevel; //level of Dust sensor
+  String mq15Level; //level of MQ15 sensor
+  String tempLevel; //temperature level of DHT sensor
+  String humidLevel; //Humidity level of DHT sensor
+  int purifiercontrol; //air purifier control OFF=0 & ON=1
 
-  StreamController<int> _tlevel = StreamController<int>();
-  Stream<int> get tlevelstream => _tlevel.stream;
-  StreamSink<int> get tlevelsink => _tlevel.sink;
+  StreamController<String> _methaneLevel = StreamController<String>();
+  Stream<String> get methanestream => _methaneLevel.stream;
+  StreamSink<String> get methanesink => _methaneLevel.sink;
 
-  StreamController<int> _slevel = StreamController<int>();
-  Stream<int> get slevelstream => _slevel.stream;
-  StreamSink<int> get slevelsink => _slevel.sink;
+  StreamController<String> _dustLevel = StreamController<String>();
+  Stream<String> get duststream => _dustLevel.stream;
+  StreamSink<String> get dustsink => _dustLevel.sink;
 
-  StreamController<int> _state = StreamController<int>();
-  Stream<int> get statestream => _state.stream;
-  StreamSink<int> get statesink => _state.sink;
+  StreamController<String> _mq15Level = StreamController<String>();
+  Stream<String> get mq15stream => _mq15Level.stream;
+  StreamSink<String> get mq15sink => _mq15Level.sink;
+
+  StreamController<String> _tempLevel = StreamController<String>();
+  Stream<String> get tempstream => _tempLevel.stream;
+  StreamSink<String> get tempsink => _tempLevel.sink;
+
+  StreamController<String> _humidLevel = StreamController<String>();
+  Stream<String> get humidtream => _humidLevel.stream;
+  StreamSink<String> get humidsink => _humidLevel.sink;
+
+  StreamController<int> _controlState = StreamController<int>();
+  Stream<int> get controlstream => _controlState.stream;
+  StreamSink<int> get controlsink => _controlState.sink;
 
   int connect() {
     // if(iPaddress == null) iPaddress = '192.168.1.43';
@@ -47,7 +62,7 @@ class WaterLevelBloc implements BlocBase {
     await Firestore.instance
         .collection('waterlevel')
         .document('activate')
-        .updateData({'ipaddress':ipAddress, 'port':port});
+        .updateData({'ipaddress': ipAddress, 'port': port});
   }
 
   void setIP(String ip, int textport) {
@@ -83,24 +98,32 @@ class WaterLevelBloc implements BlocBase {
   }
 
   void dispose() {
-    _tlevel.close();
-    _slevel.close();
-    _state.close();
+    _methaneLevel.close();
+    _dustLevel.close();
+    _mq15Level.close();
+    _tempLevel.close();
+    _humidLevel.close();
+    _controlState.close();
   }
 
   void _handledata(String data) {
     final jsonData = json.decode(data);
-    if (jsonData['pump'] != null) {
-      pumpstate = jsonData['pump'];
-      // print('Pump value: $pumpstate');
-      statesink.add(pumpstate);
-    } else if (jsonData['Slevel'] != null) {
-      slevel = jsonData['Slevel'];
-      tlevel = jsonData['Tlevel'];
-      // print(
-      //     'Tank level: ${tlevel.toString()}, Sump level: ${slevel.toString()}');
-      slevelsink.add(slevel);
-      tlevelsink.add(tlevel);
+    if (jsonData['control'] != null) {
+      purifiercontrol = jsonData['control'];
+      print('Purifier Control value: $purifiercontrol');
+      controlsink.add(purifiercontrol);
+    } else if (jsonData['dust_level'] != null) {
+      dustLevel = jsonData['dust_level'];
+      methaneLevel = jsonData['methane_level'];
+      tempLevel = jsonData['temp_level'];
+      humidLevel = jsonData['humid_level'];
+      mq15Level = jsonData['mq15_level'];
+
+      methanesink.add(methaneLevel);
+      dustsink.add(dustLevel);
+      tempsink.add(tempLevel);
+      humidsink.add(humidLevel);
+      mq15sink.add(mq15Level);
     }
   }
 }

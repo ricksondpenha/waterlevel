@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       theme: ThemeData.light(),
       home: BlocProvider(
-        bloc: WaterLevelBloc(),
+        bloc: AirQualityBloc(),
         child: HomePage()),
     );
   }

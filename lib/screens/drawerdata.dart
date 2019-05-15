@@ -12,7 +12,7 @@ class DrawerData extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextEditingController _ipaddress = new TextEditingController();
     final TextEditingController _port = new TextEditingController();
-    final bloc = BlocProvider.of<WaterLevelBloc>(context);
+    final bloc = BlocProvider.of<AirQualityBloc>(context);
     return Drawer(
       child: GestureDetector(
         onTap: () {
@@ -34,7 +34,7 @@ class DrawerData extends StatelessWidget {
     );
   }
 
-  Padding buildConnectbtn(WaterLevelBloc bloc, TextEditingController _ipaddress,
+  Padding buildConnectbtn(AirQualityBloc bloc, TextEditingController _ipaddress,
       TextEditingController _port) {
     return Padding(
       padding: const EdgeInsets.only(top: 10.0),
@@ -65,7 +65,7 @@ class DrawerData extends StatelessWidget {
     );
   }
 
-  Padding buildPort(TextEditingController _port, WaterLevelBloc bloc) {
+  Padding buildPort(TextEditingController _port, AirQualityBloc bloc) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: TextField(
@@ -78,7 +78,7 @@ class DrawerData extends StatelessWidget {
   }
 
   Padding buildIPaddress(
-      TextEditingController _ipaddress, WaterLevelBloc bloc) {
+      TextEditingController _ipaddress, AirQualityBloc bloc) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: TextField(

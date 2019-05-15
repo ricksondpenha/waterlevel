@@ -11,7 +11,7 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bloc = BlocProvider.of<WaterLevelBloc>(context);
+    final bloc = BlocProvider.of<AirQualityBloc>(context);
     // bloc.connect();
     return Dash(bloc: bloc);
   }
@@ -23,7 +23,7 @@ class Dash extends StatelessWidget {
     @required this.bloc,
   }) : super(key: key);
 
-  final WaterLevelBloc bloc;
+  final AirQualityBloc bloc;
   @override
   Widget build(BuildContext context) {
     final GlobalKey<ScaffoldState> _scaffoldKey =
@@ -40,13 +40,12 @@ class Dash extends StatelessWidget {
           builder:
               (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
             if (snapshot.hasData) {
-
               bloc.setIP(snapshot.data.documents[0].data['ipaddress'],
                   snapshot.data.documents[0].data['port']);
               bloc.send(bloc.ipaddress, bloc.port, '{"request":"level"}');
               bloc.send(bloc.ipaddress, bloc.port, '{"request":"state"}');
               if (snapshot.data.documents[0].data['registered']) {
-                return _levelbody();
+                return _airlevel();
               } else
                 return Center(child: CircularProgressIndicator());
             } else
@@ -55,71 +54,98 @@ class Dash extends StatelessWidget {
     );
   }
 
-  ListView _levelbody() {
+  Widget _airlevel() {
     return ListView(
       children: <Widget>[
-        StreamBuilder<int>(
-            stream: bloc.tlevelstream,
-            initialData: 1,
-            builder: (context, snapshot) {
-              Color level4 = Colors.blue[200];
-              Color level3 = Colors.blue[400];
-              Color level2 = Colors.blue[600];
-              Color level1 = Colors.blue[800];
-              if (snapshot.data == 1) {
-                level4 = Colors.transparent;
-                level3 = Colors.transparent;
-                level2 = Colors.transparent;
-              } else if (snapshot.data == 2) {
-                level4 = Colors.transparent;
-                level3 = Colors.transparent;
-              } else if (snapshot.data == 3) {
-                level4 = Colors.transparent;
-              }
-
-              return LevelCards(
-                  config: CustomConfig(
-                    colors: [level4, level3, level2, level1],
-                    durations: [25000, 18000, 12000, 5000],
-                    heightPercentages: [0.01, 0.30, 0.60, 0.80],
-                  ),
-                  bloc: bloc,
-                  title: 'TANK',
-                  level: snapshot.data);
-            }),
-        StreamBuilder<int>(
-            stream: bloc.slevelstream,
-            initialData: 1,
-            builder: (context, snapshot) {
-              Color level4 = Colors.blue[200];
-              Color level3 = Colors.blue[500];
-              Color level2 = Colors.blue[700];
-              Color level1 = Colors.blue[800];
-              // Color level4 = Color(0xFFAED9D7);
-              // Color level3 = Color(0xFF3DDAD7);
-              // Color level2 = Color(0xFF2A93D5);
-              // Color level1 = Color(0xFF135589);
-              if (snapshot.data == 1) {
-                level4 = Colors.transparent;
-                level3 = Colors.transparent;
-                level2 = Colors.transparent;
-              } else if (snapshot.data == 2) {
-                level4 = Colors.transparent;
-                level3 = Colors.transparent;
-              } else if (snapshot.data == 3) {
-                level4 = Colors.transparent;
-              }
-              return LevelCards(
-                  config: CustomConfig(
-                    colors: [level4, level3, level2, level1],
-                    durations: [32000, 27000, 16000, 7000],
-                    heightPercentages: [0.01, 0.25, 0.50, 0.70],
-                  ),
-                  bloc: bloc,
-                  title: 'SUMP',
-                  level: snapshot.data);
-            })
+        templevel(),
+        mq15_level(),
+        dust_level(),
       ],
+    );
+  }
+
+  Widget templevel() {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20.0),
+      ),
+      elevation: 8.0,
+      margin: EdgeInsets.only(top: 15.0, left: 15.0, right: 15.0),
+      child: Column(
+        children: <Widget>[
+          Center(
+            child: StreamBuilder<String>(
+              stream: bloc.tempstream,
+              // initialData: 1,
+              builder: (BuildContext context, AsyncSnapshot snapshot) {
+                return Text(
+                  'TEMPERATURE LEVEL:${snapshot.data}',
+                  style: TextStyle(fontSize: 20),
+                );
+              },
+            ),
+          ),
+          SizedBox(
+            height: 10,
+          ),
+          Center(
+            child: StreamBuilder<String>(
+              stream: bloc.humidtream,
+              // initialData: 1,
+              builder: (BuildContext context, AsyncSnapshot snapshot) {
+                return Text(
+                  'HUMIDITY LEVEL:${snapshot.data}',
+                  style: TextStyle(fontSize: 20),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget mq15_level() {
+    return StreamBuilder<String>(
+      stream: bloc.mq15stream,
+      // initialData: 1,
+      builder: (BuildContext context, AsyncSnapshot snapshot) {
+        return Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          elevation: 8.0,
+          margin: EdgeInsets.only(top: 15.0, left: 15.0, right: 15.0),
+          child: Center(
+            child: Text(
+              'MQ15 LEVEL:${snapshot.data}',
+              style: TextStyle(fontSize: 20),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget dust_level() {
+    return StreamBuilder<String>(
+      stream: bloc.duststream,
+      // initialData: 1,
+      builder: (BuildContext context, AsyncSnapshot snapshot) {
+        return Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          elevation: 8.0,
+          margin: EdgeInsets.only(top: 15.0, left: 15.0, right: 15.0),
+          child: Center(
+            child: Text(
+              'DUST LEVEL:${snapshot.data}',
+              style: TextStyle(fontSize: 20),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -127,7 +153,7 @@ class Dash extends StatelessWidget {
     return AppBar(
       automaticallyImplyLeading: false,
       centerTitle: true,
-      title: Text('Air Quality Monitoring'),
+      title: Text('Air Quality Monitor'),
     );
   }
 
@@ -156,7 +182,7 @@ class Dash extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 45.0),
               child: Text(
-                'PUMP',
+                'Air Purifier',
                 style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
               ),
             ),
@@ -186,12 +212,12 @@ class PumpButton extends StatelessWidget {
     @required this.bloc,
   }) : super(key: key);
 
-  final WaterLevelBloc bloc;
+  final AirQualityBloc bloc;
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<int>(
-        stream: bloc.statestream,
+        stream: bloc.controlstream,
         builder: (context, snapshot) {
           if (snapshot.data == 1) {
             return pumpbutton(bloc, 'ON', Colors.blue[300]);
@@ -211,7 +237,7 @@ class LevelCards extends StatelessWidget {
     @required this.config,
   }) : super(key: key);
 
-  final WaterLevelBloc bloc;
+  final AirQualityBloc bloc;
   final String title;
   final int level;
   final CustomConfig config;
@@ -282,7 +308,7 @@ class LevelCards extends StatelessWidget {
   }
 }
 
-Widget pumpbutton(WaterLevelBloc bloc, String s, Color color) {
+Widget pumpbutton(AirQualityBloc bloc, String s, Color color) {
   int toggle = 1;
   if (s == 'ON') toggle = 0;
   return Container(
@@ -291,7 +317,7 @@ Widget pumpbutton(WaterLevelBloc bloc, String s, Color color) {
     child: FloatingActionButton(
       backgroundColor: color,
       foregroundColor: Colors.white,
-      tooltip: 'Pump Control',
+      tooltip: 'Air Purifier Control',
       child: Text(
         s,
         style: TextStyle(fontSize: 22.0, fontWeight: FontWeight.bold),
