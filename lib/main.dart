@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:waterlevel/mescom.dart';
 import 'package:waterlevel/screens/drawerdata.dart';
 import 'package:provider/provider.dart';
+import 'package:waterlevel/user.dart';
 import 'bloc/energy_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   runApp(MyApp());
@@ -12,24 +14,43 @@ void main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(theme: ThemeData.dark(), home: Loginpage());
+    return ChangeNotifierProvider<EnergyMon>(
+        builder: (_) => EnergyMon(),
+        child: MaterialApp(
+            theme: ThemeData.dark(),
+            initialRoute: '/',
+            routes: {
+              '/mescom': (context) => MescomPage(),
+              '/user': (context) => UserPage(),
+            },
+            home: Loginpage()));
   }
 }
 
 class Loginpage extends StatelessWidget {
+  void lazyconnect(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String ipadd = prefs.getString('ip');
+    int port = prefs.getInt('port');
+    print('ipaddress is $ipadd');
+    print('port is $port');
+    final energymon = Provider.of<EnergyMon>(context);
+    energymon.ipaddress = ipadd;
+    energymon.port = port;
+    // energymon.connect(ipadd, port);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<EnergyMon>(
-      builder: (_) => EnergyMon(),
-      child: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: true,
-          centerTitle: true,
-          title: Text('E-Meter'),
-        ),
-        drawer: new DrawerData(),
-        body: new HomePage(),
+    lazyconnect(context);
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        centerTitle: true,
+        title: Text('E-Meter'),
       ),
+      drawer: new DrawerData(),
+      body: new HomePage(),
     );
   }
 }
@@ -42,259 +63,124 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.all(10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      margin: EdgeInsets.all(15),
+      child: ListView(
         children: <Widget>[
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => MescomPage(context)),
-              );
-            },
-            child: Card(
-                elevation: 10,
-                child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      image: DecorationImage(
-                        image: AssetImage("assets/mescom.png"),
-                        fit: BoxFit.fitHeight,
-                      ),
-                    ),
-                    width: 1000,
-                    height: 200,
-                    child: null)),
-          ),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => UserPage()),
-              );
-            },
-            child: Card(
-                elevation: 10,
-                child: Container(
-                    alignment: Alignment(0.0, 1.0),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      image: DecorationImage(
-                        image: AssetImage("assets/user.png"),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    width: 1000,
-                    height: 200,
-                    child: Text(
-                      'USER',
-                      style: TextStyle(
-                          fontSize: 35,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
-                    ))),
-          )
+          buildhomecards(context, '/mescom'),
+          buildhomecards(context, '/user'),
         ],
       ),
     );
   }
-}
 
-class UserPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider<EnergyMon>(
-      builder: (_) => EnergyMon(),
-      child: Scaffold(
-          appBar: AppBar(
-            automaticallyImplyLeading: true,
-            centerTitle: true,
-            title: Text('USER'),
+  Future<void> _logindialog(BuildContext context, String type, String user) {
+    final TextEditingController username = new TextEditingController();
+    final TextEditingController password = new TextEditingController();
+    String errortext = '';
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Container(
+            height: 200,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextField(
+                    controller: username,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(labelText: 'username'),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextField(
+                    obscureText: true,
+                    controller: password,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(labelText: 'password'),
+                  ),
+                ),
+                Center(
+                  child: RaisedButton(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30.0)),
+                    elevation: 10.0,
+                    color: Colors.green,
+                    child: Container(
+                      height: 40.0,
+                      width: 160.0,
+                      child: Center(
+                        child: Text(
+                          'LOGIN',
+                          style: TextStyle(
+                            fontSize: 22.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    onPressed: () {
+                      if (username.text == user && password.text == user)
+                        Navigator.pushNamed(context, type);
+                      else{
+                        errortext = 'Invalid username & password!';
+                      }
+                    },
+                  ),
+                ),
+                Text(errortext, style:TextStyle(color: Colors.red)),
+              ],
+            ),
           ),
-          body: new Userdata()),
+        );
+      },
     );
   }
-}
 
-class Userdata extends StatelessWidget {
-  Future<String> loadIP(BuildContext context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    var emon = EnergyMon();
-    String ipaddress = (prefs.getString('ip') ?? '192.168.1.43');
-    // emon.clientconnect(ipaddress, 9999);
-    emon.send(ipaddress, 9999, '#1');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final energymon = Provider.of<EnergyMon>(context);
-    loadIP(context);
-    return Container(
-        width: 1000,
-        margin: EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            buildCard(energymon, 'energy'),
-            buildCard(energymon, 'bill'),
-          ],
-        ));
-  }
-
-  Widget buildCard(EnergyMon energymon, String type) {
-    String imagepath;
-    String header;
-    String subheader;
-    if (type == 'energy') {
-      imagepath = "assets/energy.png";
-      header = 'Energy Consumed:';
-      subheader = '${energymon.getenergy} kW';
-    } else if (type == 'bill') {
-      imagepath = "assets/rupee.jpeg";
-      header = 'Total Bill:';
-      double amount = 0;
-      double watt = double.parse(energymon.getenergy);
-      amount = (watt / 100) * 12;
-      subheader = '$amount /- Rs';
+  Widget buildhomecards(BuildContext context, String type) {
+    String assetpath;
+    Widget label;
+    String user;
+    String pass;
+    if (type == '/mescom') {
+      assetpath = "assets/mescom.png";
+      label = null;
+      user = 'mescom';
+    } else {
+      assetpath = "assets/user.png";
+      user = 'user';
+      label = Text(
+        'USER',
+        style: TextStyle(
+            fontSize: 35, fontWeight: FontWeight.bold, color: Colors.red),
+      );
     }
-    return GestureDetector(
-      onTap: () {
-        energymon.send(energymon.getIP, 9999, '#2');
-      },
-      child: Card(
-          elevation: 10,
-          child: Container(
-              width: 1000,
-              height: 150,
-              child: Row(
-                children: <Widget>[
-                  Container(
-                    margin: EdgeInsets.all(10),
-                    child: CircleAvatar(
-                      foregroundColor: Colors.black26,
-                      radius: 50,
-                      backgroundImage: AssetImage(imagepath),
-                    ),
+    return Padding(
+      padding: const EdgeInsets.only(top: 30.0),
+      child: GestureDetector(
+        onTap: () {
+          _logindialog(context, type, user);
+        },
+        child: Card(
+            elevation: 10,
+            child: Container(
+                alignment: Alignment(0.0, 1.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  image: DecorationImage(
+                    image: AssetImage(assetpath),
+                    fit: BoxFit.fitHeight,
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Text(
-                        header,
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      Divider(),
-                      Text(
-                        subheader,
-                        style: TextStyle(fontSize: 18),
-                      ),
-                    ],
-                  )
-                ],
-              ))),
-    );
-  }
-}
-
-class MescomPage extends StatelessWidget {
-  MescomPage(BuildContext context);
-
-  @override
-  Widget build(context) {
-    return ChangeNotifierProvider<EnergyMon>(
-      builder: (_) => EnergyMon(),
-      child: Scaffold(
-          appBar: AppBar(
-            automaticallyImplyLeading: true,
-            centerTitle: true,
-            title: Text('MESCOM'),
-          ),
-          body: new Mescomdata()),
-    );
-  }
-}
-
-class Mescomdata extends StatelessWidget {
-  const Mescomdata({
-    Key key,
-  }) : super(key: key);
-
-  Future<String> loadIP(BuildContext context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    var emon = EnergyMon();
-    String ipaddress = (prefs.getString('ip') ?? '192.168.1.43');
-    // emon.clientconnect(ipaddress, 9999);
-    emon.send(ipaddress, 9999, '#1');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final energymon = Provider.of<EnergyMon>(context);
-    loadIP(context);
-    return Container(
-      child: Column(
-        children: <Widget>[
-          buildCard(energymon),
-        ],
+                ),
+                width: 1000,
+                height: 200,
+                child: label)),
       ),
-    );
-  }
-
-  Widget buildCard(EnergyMon energymon) {
-    double amount = 0;
-    double watt = double.parse(energymon.getenergy);
-    amount = (watt / 100) * 12;
-    String subheader = '$amount /- Rs';
-    return GestureDetector(
-      onTap: () {
-        print('IP ADDRESS: ${energymon.getIP}');
-        energymon.send(energymon.getIP, 9999, "*");
-      },
-      child: Card(
-          elevation: 10,
-          child: Container(
-              margin: EdgeInsets.all(15),
-              width: 1000,
-              height: 200,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Text(
-                    'RR Number: ${energymon.getRR}',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  Divider(),
-                  Text(
-                    'Energy Consumed: ${energymon.getenergy} kW',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Divider(),
-                  Text(
-                    'Bill Amount: $subheader',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Divider(),
-                  Center(
-                    child: RaisedButton(
-                      color: Colors.red,
-                      onPressed: () {
-                        energymon.send(energymon.getIP, 9999, '#1');
-                      },
-                      child: Text(
-                        'DISCONNECT',
-                        style: TextStyle(
-                            fontSize: 25, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  )
-                ],
-              ))),
     );
   }
 }
