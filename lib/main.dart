@@ -19,7 +19,9 @@ class MyApp extends StatelessWidget {
 class Loginpage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ChangeNotifierProvider<EnergyMon>(
+      builder: (_) => EnergyMon(),
+      child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: true,
           centerTitle: true,
@@ -27,6 +29,7 @@ class Loginpage extends StatelessWidget {
         ),
         drawer: new DrawerData(),
         body: new HomePage(),
+      ),
     );
   }
 }
