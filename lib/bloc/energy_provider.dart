@@ -1,18 +1,23 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:streaming_shared_preferences/streaming_shared_preferences.dart';
 
 class EnergyMon with ChangeNotifier {
+  
   EnergyMon();
   String rrnumber = '';
   String username = '';
-  String energy = '';
+  String energy = '0.0';
 
   String get getRR => rrnumber;
   String get getenergy => energy;
 
   Socket client;
-  String ipaddress = '192.168.1.43';
+  String ipaddress;
   int port = 9999;
+
+  String get getIP => ipaddress;
+  int get getPORT => port;
 
   int connect() {
     ServerSocket.bind(InternetAddress.anyIPv4, 9999).then((server) {
@@ -26,14 +31,10 @@ class EnergyMon with ChangeNotifier {
     return 0;
   }
 
-  // void updateData(String ipAddress, int port) async {
-  //   await Firestore.instance
-  //       .collection('waterlevel')
-  //       .document('activate')
-  //       .updateData({'ipaddress': ipAddress, 'port': port});
-  // }
-
-  void setIP(String ip, int textport) {
+  void setIP(String ip, int textport)async {
+    final preferences = await StreamingSharedPreferences.instance;
+    Preference<String> ipadd = preferences.getString('ip', defaultValue: '192.168.1.43');
+    ipadd.setValue(ip);
     ipaddress = ip;
     port = textport;
   }
@@ -45,10 +46,7 @@ class EnergyMon with ChangeNotifier {
       client = sock;
       sock.listen((data) {
         _handledata(String.fromCharCodes(data).trim());
-      }, onDone: () {
-
-      }
-      );
+      });
     });
   }
 
