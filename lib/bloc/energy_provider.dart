@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class EnergyMon with ChangeNotifier {
@@ -12,7 +11,7 @@ class EnergyMon with ChangeNotifier {
   String get getenergy => energy;
 
   Socket client;
-  String ipaddress = '192.168.1.40';
+  String ipaddress = '192.168.1.43';
   int port = 9999;
 
   int connect() {
@@ -27,12 +26,12 @@ class EnergyMon with ChangeNotifier {
     return 0;
   }
 
-  void updateData(String ipAddress, int port) async {
-    await Firestore.instance
-        .collection('waterlevel')
-        .document('activate')
-        .updateData({'ipaddress': ipAddress, 'port': port});
-  }
+  // void updateData(String ipAddress, int port) async {
+  //   await Firestore.instance
+  //       .collection('waterlevel')
+  //       .document('activate')
+  //       .updateData({'ipaddress': ipAddress, 'port': port});
+  // }
 
   void setIP(String ip, int textport) {
     ipaddress = ip;
@@ -42,19 +41,23 @@ class EnergyMon with ChangeNotifier {
   void clientconnect(String ipAddress, int port) {
     if (ipaddress == null) ipaddress = ipAddress;
     Socket.connect(ipaddress, port).then((sock) {
+      print('client connected');
       client = sock;
       sock.listen((data) {
         _handledata(String.fromCharCodes(data).trim());
-      });
+      }, onDone: () {
+
+      }
+      );
     });
   }
 
   void _handledata(String data) {
     if (data[0] == '#') {
-      rrnumber = data;
+      rrnumber = data.replaceFirst('#','');
       print('RR number: $rrnumber');
     } else if (data[0] == '*') {
-      energy = data;
+      energy = data.replaceFirst('*','');
       print('Energy units: $energy kW');
     }
     notifyListeners();
@@ -63,6 +66,7 @@ class EnergyMon with ChangeNotifier {
   void send(String iPaddress, int port, String message) {
     Socket.connect(iPaddress, port).then((sock) {
       sock.write(message);
+      print('sending data');
       sock.listen((data) {
         _handledata(String.fromCharCodes(data).trim());
       }, onDone: () {

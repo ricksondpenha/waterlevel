@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:waterlevel/bloc/bloc_provider.dart';
 
 class AirQualityBloc implements BlocBase {
@@ -56,13 +55,6 @@ class AirQualityBloc implements BlocBase {
     });
 
     return 0;
-  }
-
-  void updateData(String ipAddress, int port) async {
-    await Firestore.instance
-        .collection('waterlevel')
-        .document('activate')
-        .updateData({'ipaddress': ipAddress, 'port': port});
   }
 
   void setIP(String ip, int textport) {

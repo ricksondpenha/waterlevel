@@ -2,12 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:waterlevel/bloc/bloc_provider.dart';
 import 'package:waterlevel/bloc/wl_bloc.dart';
 import 'package:waterlevel/screens/drawerdata.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:wave/config.dart';
-import 'package:wave/wave.dart';
 
 class HomePage extends StatelessWidget {
-  final act = Firestore.instance;
 
   @override
   Widget build(BuildContext context) {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:waterlevel/bloc/bloc_provider.dart';
-import 'package:waterlevel/bloc/wl_bloc.dart';
+import 'package:provider/provider.dart';
+import 'package:waterlevel/bloc/energy_provider.dart';
 
 class DrawerData extends StatelessWidget {
   const DrawerData({
@@ -12,7 +12,7 @@ class DrawerData extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextEditingController _ipaddress = new TextEditingController();
     final TextEditingController _port = new TextEditingController();
-    final bloc = BlocProvider.of<AirQualityBloc>(context);
+    final energymon = Provider.of<EnergyMon>(context);
     return Drawer(
       child: GestureDetector(
         onTap: () {
@@ -23,9 +23,9 @@ class DrawerData extends StatelessWidget {
             padding: const EdgeInsets.only(top: 100.0, left: 30, right: 30),
             child: Column(
               children: <Widget>[
-                buildIPaddress(_ipaddress, bloc),
-                buildPort(_port, bloc),
-                buildConnectbtn(bloc, _ipaddress, _port),
+                buildIPaddress(_ipaddress, energymon.ipaddress),
+                buildPort(_port, energymon.port),
+                buildConnectbtn(_ipaddress, _port, energymon),
               ],
             ),
           ),
@@ -34,8 +34,8 @@ class DrawerData extends StatelessWidget {
     );
   }
 
-  Padding buildConnectbtn(AirQualityBloc bloc, TextEditingController _ipaddress,
-      TextEditingController _port) {
+  Padding buildConnectbtn( TextEditingController _ipaddress,
+      TextEditingController _port, EnergyMon energymon) {
     return Padding(
       padding: const EdgeInsets.only(top: 10.0),
       child: RaisedButton(
@@ -58,34 +58,35 @@ class DrawerData extends StatelessWidget {
           ),
         ),
         onPressed: () {
-          bloc.setIP(_ipaddress.text, int.parse(_port.text));
-          bloc.updateData(_ipaddress.text, int.parse(_port.text));
+          // bloc.setIP(_ipaddress.text, int.parse(_port.text));
+          // bloc.updateData(_ipaddress.text, int.parse(_port.text));
+          energymon.setIP(_ipaddress.text, int.parse(_port.text));
         },
       ),
     );
   }
 
-  Padding buildPort(TextEditingController _port, AirQualityBloc bloc) {
+  Padding buildPort(TextEditingController _port, int port) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: TextField(
         controller: _port,
         keyboardType: TextInputType.numberWithOptions(),
         decoration:
-            InputDecoration(labelText: 'Port', hintText: '${bloc.port}'),
+            InputDecoration(labelText: 'Port', hintText: '$port'),
       ),
     );
   }
 
   Padding buildIPaddress(
-      TextEditingController _ipaddress, AirQualityBloc bloc) {
+      TextEditingController _ipaddress, String ipaddress) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: TextField(
         controller: _ipaddress,
         keyboardType: TextInputType.numberWithOptions(),
         decoration: InputDecoration(
-            labelText: 'IP Address', hintText: '${bloc.ipaddress}'),
+            labelText: 'IP Address', hintText: '$ipaddress'),
       ),
     );
   }
