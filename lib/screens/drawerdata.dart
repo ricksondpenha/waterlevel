@@ -61,6 +61,7 @@ class DrawerData extends StatelessWidget {
           // bloc.setIP(_ipaddress.text, int.parse(_port.text));
           // bloc.updateData(_ipaddress.text, int.parse(_port.text));
           energymon.setIP(_ipaddress.text, int.parse(_port.text));
+          energymon.clientconnect(_ipaddress.text, 9999);
         },
       ),
     );

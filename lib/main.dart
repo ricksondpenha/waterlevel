@@ -3,40 +3,23 @@ import 'package:flutter/painting.dart';
 import 'package:waterlevel/screens/drawerdata.dart';
 import 'package:provider/provider.dart';
 import 'bloc/energy_provider.dart';
-import 'package:streaming_shared_preferences/streaming_shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-Future<void> main() async {
-  /// Obtain instance to streaming shared preferences, create MyAppSettings, and
-  /// once that's done, run the app.
-  final preferences = await StreamingSharedPreferences.instance;
-
-  runApp(MyApp(preferences));
+void main() async {
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  MyApp(this.preferences);
-  final StreamingSharedPreferences preferences;
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(theme: ThemeData.dark(), home: Loginpage(preferences));
+    return MaterialApp(theme: ThemeData.dark(), home: Loginpage());
   }
 }
 
 class Loginpage extends StatelessWidget {
-  Loginpage(this.preferences);
-  final StreamingSharedPreferences preferences;
   @override
   Widget build(BuildContext context) {
-    var emon = EnergyMon();
-    Preference<String> ipaddress = preferences.getString('ip', defaultValue: '192.168.1.43');
-    ipaddress.listen((value) {
-      emon.clientconnect(value, 9999);
-      // emon.send(value, 9999, 'req');
-    });
-
-    return ChangeNotifierProvider<EnergyMon>(
-      builder: (_) => EnergyMon(),
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: true,
           centerTitle: true,
@@ -44,7 +27,6 @@ class Loginpage extends StatelessWidget {
         ),
         drawer: new DrawerData(),
         body: new HomePage(),
-      ),
     );
   }
 }
@@ -134,11 +116,18 @@ class UserPage extends StatelessWidget {
 }
 
 class Userdata extends StatelessWidget {
+  Future<String> loadIP(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var emon = EnergyMon();
+    String ipaddress = (prefs.getString('ip') ?? '192.168.1.43');
+    // emon.clientconnect(ipaddress, 9999);
+    emon.send(ipaddress, 9999, '#1');
+  }
+
   @override
   Widget build(BuildContext context) {
     final energymon = Provider.of<EnergyMon>(context);
-
-    
+    loadIP(context);
     return Container(
         width: 1000,
         margin: EdgeInsets.all(10),
@@ -165,14 +154,14 @@ class Userdata extends StatelessWidget {
       header = 'Total Bill:';
       double amount = 0;
       double watt = double.parse(energymon.getenergy);
-      amount = (watt/1000 )* 5.5;
+      amount = (watt / 100) * 12;
       subheader = '$amount /- Rs';
     }
     return GestureDetector(
-      onTap: (){
-        energymon.send(energymon.getIP, 9999, '*');
+      onTap: () {
+        energymon.send(energymon.getIP, 9999, '#2');
       },
-          child: Card(
+      child: Card(
           elevation: 10,
           child: Container(
               width: 1000,
@@ -193,8 +182,8 @@ class Userdata extends StatelessWidget {
                     children: <Widget>[
                       Text(
                         header,
-                        style:
-                            TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                       Divider(),
                       Text(
@@ -232,9 +221,18 @@ class Mescomdata extends StatelessWidget {
     Key key,
   }) : super(key: key);
 
+  Future<String> loadIP(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var emon = EnergyMon();
+    String ipaddress = (prefs.getString('ip') ?? '192.168.1.43');
+    // emon.clientconnect(ipaddress, 9999);
+    emon.send(ipaddress, 9999, '#1');
+  }
+
   @override
   Widget build(BuildContext context) {
     final energymon = Provider.of<EnergyMon>(context);
+    loadIP(context);
     return Container(
       child: Column(
         children: <Widget>[
@@ -245,16 +243,21 @@ class Mescomdata extends StatelessWidget {
   }
 
   Widget buildCard(EnergyMon energymon) {
+    double amount = 0;
+    double watt = double.parse(energymon.getenergy);
+    amount = (watt / 100) * 12;
+    String subheader = '$amount /- Rs';
     return GestureDetector(
-      onTap: (){
-        energymon.send(energymon.getIP, 9999, '*');
+      onTap: () {
+        print('IP ADDRESS: ${energymon.getIP}');
+        energymon.send(energymon.getIP, 9999, "*");
       },
-          child: Card(
+      child: Card(
           elevation: 10,
           child: Container(
               margin: EdgeInsets.all(15),
               width: 1000,
-              height: 150,
+              height: 200,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -269,6 +272,11 @@ class Mescomdata extends StatelessWidget {
                     style: TextStyle(fontSize: 20),
                   ),
                   Divider(),
+                  Text(
+                    'Bill Amount: $subheader',
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  Divider(),
                   Center(
                     child: RaisedButton(
                       color: Colors.red,
@@ -277,8 +285,8 @@ class Mescomdata extends StatelessWidget {
                       },
                       child: Text(
                         'DISCONNECT',
-                        style:
-                            TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 25, fontWeight: FontWeight.bold),
                       ),
                     ),
                   )
